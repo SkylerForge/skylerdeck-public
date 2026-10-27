@@ -3,6 +3,7 @@
 import { destino } from './arrastrar.js';
 import { h, icono, plural, sumarDias } from './dom.js';
 import { item, saludo, siguiente } from './inicio.js';
+import { render } from './markdown.js';
 
 const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const DIAS_LARGOS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -61,9 +62,20 @@ function detalle(fecha, s, ctx) {
       h('h2', fecha === s.hoy ? `Hoy · ${titulo.split(', ')[1]}` : titulo),
       h('button.icono-btn', { 'aria-label': `Añadir tarea el ${titulo}`, onclick: () => ctx.anadirEn(fecha) }, icono('mas', 'ico--s'))),
     h('div.mes-detalle__lista', vencidas, items.length ? items : (vencidas.length ? null : h('p.sem-dia__libre', 'Nada este día.'))),
+    notaDelDia(fecha, s),
     h('footer.mes-detalle__pie',
       h('button.anadir', { onclick: () => ctx.verSemana(fecha) }, icono('calendario', 'ico--s'), 'Ver la semana'),
       h('a.anadir', { href: `#/n/${fecha}` }, icono('nota', 'ico--s'), (s.notas_dia || []).includes(fecha) ? 'Nota del día' : 'Escribir nota del día')));
+}
+
+/** The day's note (the diary), read-only; a click on a [[link]] or the title opens it to edit. */
+function notaDelDia(fecha, s) {
+  const texto = (s.textos_dia || {})[fecha];
+  if (!texto?.trim()) return null;
+  const abrir = () => { window.location.hash = `#/n/${fecha}`; };
+  return h('section.mes-detalle__nota', { 'aria-label': 'Nota del día' },
+    h('a.mes-detalle__nota-cab', { href: `#/n/${fecha}` }, icono('nota', 'ico--s'), 'Nota del día'),
+    render(texto, { alEnlace: abrir }));
 }
 
 export function mes(d, s, ctx) {

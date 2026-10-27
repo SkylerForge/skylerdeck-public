@@ -2,8 +2,8 @@
 
 # SKYLERDECK
 
-**Tus tareas y tus notas, en tu servidor.**<br>
-Una agenda al estilo Todoist con notas enlazadas al estilo Obsidian, que te avisa por Telegram y a la que le puedes escribir para apuntar cosas.
+**Tu agenda y tu diario, en tu servidor.**<br>
+Tareas al estilo Todoist, notas enlazadas al estilo Obsidian y un diario de lo que vas haciendo cada día. Te avisa por Telegram, y por Telegram le escribes tanto lo que tienes que hacer como lo que ya has hecho.
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-9eff6a?style=flat-square&labelColor=12160f)](docs/instalacion.md)
 [![Self-hosted](https://img.shields.io/badge/en%20tu%20servidor-systemd-c9b88a?style=flat-square&labelColor=12160f)](docs/instalacion.md)
@@ -16,11 +16,23 @@ Una agenda al estilo Todoist con notas enlazadas al estilo Obsidian, que te avis
 
 ## Qué es
 
-SkylerDeck es una agenda personal que instalas **en tu propio servidor**: un VPS, un mini PC en casa o una Raspberry Pi. La abres desde el navegador del ordenador, del móvil o de una tablet en la pared, y todo se queda en tu máquina, sin cuentas, suscripciones ni nubes ajenas.
+SkylerDeck es una agenda personal y un diario que instalas **en tu propio servidor**: un VPS, un mini PC en casa o una Raspberry Pi. La abres desde el navegador del ordenador, del móvil o de una tablet en la pared, y todo se queda en tu máquina, sin cuentas, suscripciones ni nubes ajenas.
 
 Cada tarea y cada nota es un **archivo Markdown** normal en una carpeta. Puedes leerlo, editarlo con cualquier programa, guardarlo en git o pasárselo a un agente de IA. Si un día dejas de usar la agenda, tus datos siguen ahí, legibles.
 
 Y viene con un **bot de Telegram propio**: te avisa antes de cada cita y te manda el resumen de la mañana. Si le escribes «Recuérdame que tengo cita con el dentista el martes a las cinco y media», te lo apunta.
+
+### No solo una agenda: también un diario
+
+Cada día tiene su **nota del día**, y puedes ir llenándola desde el móvil mientras pasa el día, sin abrir el panel. Basta con escribir al bot:
+
+```
+nota: he llamado al taller, el coche estará el jueves
+anota: el dentista dice que vuelva en marzo
+diario: reunión larga con el equipo, buena idea para la web
+```
+
+Cada mensaje se añade a la nota de ese día. Al final tienes un registro de lo que has ido haciendo, junto a las tareas de esa fecha: en el calendario, al **señalar un día** ves sus tareas y, debajo, su nota. Así puedes volver a cualquier día y saber qué pasó.
 
 ## Lo que puedes hacer
 
@@ -33,9 +45,9 @@ Y viene con un **bot de Telegram propio**: te avisa antes de cada cita y te mand
 | **Proyectos en lista o tablero** | Columnas por estado: en curso, pendiente, esperando (a quién y cuándo revisar) y más adelante. |
 | **Tareas completas** | Prioridades p1–p4, etiquetas `@`, subtareas, repeticiones con o sin fecha de fin («todos los días hasta el 15 de diciembre», «los martes»), bloques con duración y bitácora de cambios. |
 | **Notas enlazadas** | Notas Markdown con `[[enlaces]]` a notas, tareas, proyectos y fechas. Cada una muestra quién la menciona. |
-| **Nota del día** | Un diario que se crea solo en cuanto escribes algo, enlazado desde el calendario. |
+| **Diario** | Una nota por día que se crea sola en cuanto escribes algo, desde el panel o desde Telegram («nota: …»). Al señalar un día en el calendario ves sus tareas y su nota juntas. |
 | **Búsqueda rápida** | `Ctrl+K` para saltar a cualquier tarea, nota, proyecto o etiqueta. |
-| **Bot de Telegram** | Avisos que puedes posponer, resumen de la mañana y de la noche y repaso del domingo. Se le habla normal: «ya he ido al dentista», «pasa la reunión al jueves», «hoy no hay gimnasio», «añade a la compra: leche, pan». |
+| **Bot de Telegram** | Avisos que puedes posponer, resumen de la mañana y de la noche y repaso del domingo. Se le habla normal: «ya he ido al dentista», «pasa la reunión al jueves», «hoy no hay gimnasio», «elimina las dos clases de crossfit», «añade a la compra: leche, pan», «nota: he llamado al taller». |
 | **Móvil y tablet** | Desliza una tarea con el dedo para marcarla como hecha o pasarla a mañana; en el ordenador, arrástrala a otro día. Modo kiosco para una tablet en la pared, con reloj grande y la pantalla siempre encendida. |
 | **Claro y oscuro** | Tema oscuro «Ops nocturna», tema claro o el del sistema, a elegir en cada dispositivo. |
 | **Para agentes** | Una línea de comandos (`bin/agenda`) con salida JSON, para que tus scripts o un agente de IA lean y apunten tareas. |

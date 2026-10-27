@@ -42,7 +42,7 @@ Sin comandos también entiendo:
 «hoy no hay gimnasio» · me salto esa vez
 «ponle prioridad 1 al informe», «marca el informe como urgente»
 «añade a la compra: leche, pan» · a la lista (si no existe, la creo)
-/nota texto · apuntarlo en la nota de hoy
+«nota: he llamado al taller» · a la nota de hoy (también «anota: …» o /nota texto)
 /buscar texto · buscar en tareas y notas
 /probar texto · ver qué entiendo, sin apuntar nada
 /proyectos · los nombres para usar con #"""

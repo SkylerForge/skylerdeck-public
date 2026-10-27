@@ -92,6 +92,13 @@ class Server(unittest.TestCase):
         self.assertGreater(r.json["fecha"], t["fecha"])  # the next Monday or Thursday after the first one
         self.assertEqual(self.write("POST", f"/api/tareas/{t['id']}/saltar", {"version": t["version"]}).status_code, 409)
 
+    def test_the_month_brings_each_days_note(self):
+        from agenda import fechas
+        hoy = fechas.iso(fechas.hoy())
+        self.assertEqual(self.write("PUT", f"/api/notas/{hoy}", {"cuerpo": "He llamado al taller"}).status_code, 200)
+        d = self.get(f"/api/mes?mes={hoy[:7]}").json
+        self.assertEqual((d["notas_dia"], d["textos_dia"]), ([hoy], {hoy: "He llamado al taller"}))
+
     def test_unknown_project_is_an_error(self):
         r = self.write("POST", "/api/tareas", {"texto": "Algo #NoExiste"})
         self.assertEqual(r.status_code, 404)

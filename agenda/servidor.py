@@ -80,7 +80,9 @@ def crear_app(datos: Path | None = None, clave: str | None = None, hosts_extra: 
 
     def con_notas_dia(data: dict) -> dict:
         dias = {d["fecha"] for d in data["dias"]}
-        data["notas_dia"] = sorted(n.slug for n in notas.listar() if n.tipo == "diario" and n.slug in dias)
+        diarios = [n for n in notas.listar() if n.tipo == "diario" and n.slug in dias]
+        data["notas_dia"] = sorted(n.slug for n in diarios)
+        data["textos_dia"] = {n.slug: n.cuerpo for n in diarios}  # the chosen day shows its note
         return data
 
     @app.post("/api/parsear")

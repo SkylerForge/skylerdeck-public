@@ -1,7 +1,8 @@
 """Plain messages that talk about tasks already in the agenda instead of adding one.
 
 «borra la cita del dentista», «hoy no hay gimnasio», «ya he ido al dentista», «pasa el dentista al
-jueves», «ponle prioridad 1 al informe», «añade a la compra: leche, pan».
+jueves», «ponle prioridad 1 al informe», «añade a la compra: leche, pan»; and «nota: he llamado al
+taller», which goes to today's note instead of being a task.
 
 A rule only acts when some task matches the words (encontrar.py); otherwise the message is a new task,
 as always, except an order like «borra…» / «elimina…», which answers that it found nothing (with a button
@@ -46,15 +47,37 @@ LISTA_RE = re.compile(
     rf"(?P<lista>(?:(?:la|el|mi)\s+)?[^\W\d_]+(?:\s+de\s+[^\W\d_]+)?){_FIN}", re.IGNORECASE)
 SEPARA_COSAS_RE = re.compile(r"\s*(?:,|;|\by\b|\be\b)\s*", re.IGNORECASE)
 ARTICULO_RE = re.compile(r"^(?:la|el|los|las|mi|mis)\s+", re.IGNORECASE)
+# «nota: …», «anota: …», «diario: …», «apunta en la nota de hoy que …»: today's note, not a task.
+# «Anota llamar a Ana» (no colon, no «en notas») is still a task.
+NOTA_RE = re.compile(
+    r"^(?:(?:notas?|diario|an[oó]ta)\s*:"
+    r"|(?:an[oó]ta(?:me|lo)?|ap[uú]nta(?:me|lo)?|escribe|pon|guarda|a[ñn][aá]de)\s+(?:en|a)\s+(?:la\s+|las\s+|mis\s+|el\s+)?"
+    r"(?:notas?(?:\s+de\s+hoy|\s+del\s+d[ií]a)?|diario)\b(?:\s+que)?\s*[:,]?)"
+    r"\s*(?P<texto>\S.*)", re.IGNORECASE | re.DOTALL)
 NUMERO_RE = re.compile(r"\bT-?(\d{1,6})\b", re.IGNORECASE)  # task numbers inside a text, like my own answers
 MAX_COSAS = 30
 
 
 class Frases:
+    def _a_nota(self, chat: str, texto: str) -> str | None:
+        m = NOTA_RE.match(texto)
+        if not m:
+            return None
+        self._nota_del_dia(m["texto"])
+        self._nota_apuntada(chat)
+        return "nota del día"
+
+    def _nota_apuntada(self, chat: str) -> None:
+        abrir = [[{"text": "Abrir la nota", "url": f"{self.base_url}/#/notas/hoy"}]] if self.base_url else None
+        self._decir(chat, "Apuntado en la nota de hoy.", abrir)
+
     def _frase_lineas(self, chat: str, texto: str) -> str | None:
         """«elimina» and, below it, the tasks: one per line, or lines pasted from my own answer
         («· Clase de Crossfit (T-015 · Hoy, 21:00)»), where the numbers win. Any other message of
         several lines is new tasks, even if it starts with «Cancelar…»."""
+        hecho = self._a_nota(chat, texto)
+        if hecho:
+            return hecho
         lineas = [l.strip().lstrip("-•*·").strip() for l in texto.splitlines()]
         lineas = [l for l in lineas if l]
         m = QUITAR_RE.match(lineas[0]) if lineas else None
@@ -80,6 +103,9 @@ class Frases:
 
     def _frase(self, chat: str, texto: str) -> str | None:
         """Handles a one-line message that talks about existing tasks; None when it is a new task."""
+        hecho = self._a_nota(chat, texto)
+        if hecho:
+            return hecho
         m = LISTA_DOS_PUNTOS_RE.match(texto)
         if m:
             return self._a_lista(chat, m["lista"], m["cosas"], crear=True)

@@ -123,7 +123,7 @@ class Bot(Textos, Frases):
             if not resto:
                 raise AgendaError("Escribe lo que quieres apuntar: /nota texto")
             self._nota_del_dia(resto)
-            self._decir(chat, "Apuntado en la nota de hoy.")
+            self._nota_apuntada(chat)
             return "nota del día"
         elif cmd == "buscar":
             self._decir(chat, self._buscar(resto))

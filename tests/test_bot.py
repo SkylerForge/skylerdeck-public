@@ -93,6 +93,22 @@ class TelegramBot(Base):
         self.assertIn("Vuelve", d1["text"])
         self.assertEqual(d2["reply_markup"]["inline_keyboard"], [[{"text": "Abrir", "url": "https://x"}]])
 
+    def test_plain_messages_to_todays_note(self):
+        nota = lambda: Notas(self.datos).obtener("2026-10-26").cuerpo.strip()  # noqa: E731
+        self.escribir("nota: he llamado al taller")
+        r = self.respuesta()
+        self.assertEqual(r["text"], "Apuntado en la nota de hoy.")
+        self.assertEqual(r["reply_markup"]["inline_keyboard"][0][0]["url"], "https://agenda.example.ts.net:8443/#/notas/hoy")
+        self.escribir("Anota: el dentista dice que vuelva en marzo")
+        self.escribir("apunta en la nota de hoy que Marta ya ha pagado")
+        self.escribir("Diario:\n- reunión larga\n- buena idea para la web")
+        self.assertEqual(nota(), "he llamado al taller\n\nel dentista dice que vuelva en marzo\n\nMarta ya ha pagado"
+                                 "\n\n- reunión larga\n- buena idea para la web")
+        self.assertEqual(self.f.listar(), [])
+        # Without the colon or «en la nota», «anota…» is still a task.
+        self.escribir("Anota llamar a Ana mañana")
+        self.assertEqual([t.titulo for t in self.f.listar()], ["Llamar a Ana"])
+
     def test_daily_note_search_and_preview(self):
         self.escribir("/nota Idea para el viernes @casa")
         self.escribir("/nota Otra más")

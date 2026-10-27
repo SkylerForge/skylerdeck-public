@@ -216,6 +216,20 @@ Además de apuntar y quitar, entiende estas frases. Igual que al quitar, solo ac
 
 Saltar solo vale para la **próxima** vez que toca una tarea que se repite. Si nombras una fecha más lejana, el bot te lo dice y te ofrece saltar la próxima.
 
+### Apuntar en la nota del día
+
+Para dejar constancia de lo que vas haciendo, sin crear tareas, empieza el mensaje por `nota:`, `anota:` o `diario:`, o di dónde va:
+
+```
+nota: he llamado al taller, el coche estará el jueves
+Anota: el dentista dice que vuelva en marzo
+Apunta en la nota de hoy que Marta ya ha pagado
+```
+
+Cada mensaje se añade a la nota de hoy, que ves en **Notas** del panel y desde el calendario. La respuesta trae el botón **Abrir la nota**. También vale con varias líneas, y `/nota texto` hace lo mismo.
+
+Sin los dos puntos ni «en la nota», «Anota llamar a Ana mañana» sigue siendo una tarea.
+
 ### Botones
 
 - **✓ Hecha**: la cierra. Si es una tarea que se repite, pasa a la siguiente fecha.

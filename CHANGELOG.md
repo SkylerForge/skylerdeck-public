@@ -2,6 +2,12 @@
 
 Lo que trae cada versión de SkylerDeck. Para pasar a la última: `sudo scripts/instalar.sh actualizar` ([cómo funciona](docs/instalacion.md#actualizar)).
 
+## 1.0.2 · 27 de octubre de 2026
+
+**Diario**
+- Escríbele al bot «nota: …», «anota: …» o «diario: …» (o «apunta en la nota de hoy que…») y se añade a la nota del día, sin crear una tarea. La respuesta trae el botón **Abrir la nota**.
+- Al señalar un día en el calendario, debajo de sus tareas se ve su nota del día.
+
 ## 1.0.1 · 27 de octubre de 2026
 
 **Bot de Telegram**

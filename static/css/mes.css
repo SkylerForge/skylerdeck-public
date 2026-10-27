@@ -54,6 +54,13 @@
 .mes-detalle__cab { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 0 var(--space-2); }
 .mes-detalle__cab h2 { margin: 0; font-size: 15px; }
 .mes-detalle__lista { flex: 1; min-height: 0; overflow: auto; }
+/* With a note, the tasks take what they need and the note fills the rest (each scrolls on its own). */
+.mes-detalle:has(.mes-detalle__nota) .mes-detalle__lista { flex: 0 1 auto; }
+.mes-detalle__nota { flex: 1 1 auto; min-height: 140px; overflow: auto; margin: var(--space-2) 0 0; padding: var(--space-3) var(--space-2) var(--space-2); border-top: 1px solid var(--linea); }
+.mes-detalle__nota-cab { display: inline-flex; align-items: center; gap: 6px; min-height: var(--toque); color: var(--tinta-2); font-size: 13px; font-weight: 600; text-decoration: none; }
+.mes-detalle__nota-cab:hover { color: var(--tinta); }
+.mes-detalle__nota .md { font-size: 14px; line-height: 1.5; }
+.mes-detalle__nota .md > :first-child { margin-top: var(--space-1); }
 .mes-detalle__pie { display: flex; flex-wrap: wrap; gap: 0 var(--space-4); padding: var(--space-2) var(--space-2) 0; border-top: 1px solid var(--linea); }
 .mes-detalle__pie .anadir { font-size: 14px; }
 
@@ -69,6 +76,7 @@
   .mes-dia { align-items: center; min-height: 52px; padding: 6px 2px; }
   .mes-dia__num { justify-content: center; font-size: 15px; }
   .mes-dia__nota, .mes-dia__lineas { display: none; }
+  .mes-detalle__nota { min-height: 0; }
   .mes-dia__puntos { display: flex; gap: 3px; min-height: 6px; }
   .mes-dia__puntos .punto { width: 5px; height: 5px; }
   .sem-nav { flex-wrap: wrap; }
