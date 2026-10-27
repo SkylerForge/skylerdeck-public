@@ -121,7 +121,9 @@ Escríbele como se lo dirías a alguien:
 | `Fisio el lunes y el miércoles a las 10` | Dos tareas sueltas: lunes y miércoles a las 10:00 |
 | `Comprar pilas` | Tarea sin fecha (va a la Bandeja) |
 
-Las coletillas del principio, como «Recuérdame que», «Apunta», «Tengo que» o «Por favor», no pasan al título.
+Las coletillas del principio, como «Recuérdame que», «Apunta», «Añádeme», «Tengo que» o «Por favor», no pasan al título.
+
+Cada tarea apuntada te llega con sus botones (**✓ Hecha**, **→ Mañana**, **Abrir**), también cuando un mensaje apunta varias: hasta cuatro, cada una en su mensaje. Si son más, te llega la lista con un botón por tarea y otro para **🗑 Quitar estas**, por si no era lo que querías.
 
 ### Tareas que se repiten
 
@@ -179,12 +181,21 @@ Cancela la reunión con Marta del lunes
 Quítame el gimnasio de mañana
 ```
 
-El bot busca la tarea y **pregunta antes de quitarla**: «¿Quito de la agenda «Dentista»?», con los botones **🗑 Sí, quítala** y **No**. Si hay varias que encajan, te deja elegir cuál.
+El bot busca la tarea y **pregunta antes de quitarla**: «¿Quito de la agenda «Dentista»?», con los botones **🗑 Sí, quítala** y **No**. Si hay varias que encajan, te deja elegir cuál o quitar **🗑 Todas**: «Elimina las dos clases de crossfit».
 
-Como «Cancelar el seguro del coche» también podría ser una tarea nueva, cuando la frase empieza por borra, cancela, quita, elimina o anula pasa esto:
+Para quitar varias de una vez, pon la orden en la primera línea y debajo una tarea por línea. También vale pegar las líneas de una respuesta del bot, porque llevan el número de cada tarea:
 
-- Si no hay ninguna tarea que encaje, la apunta como tarea nueva, como siempre.
-- Si alguna encaja, te pregunta y te da también el botón **No: apúntalo como tarea nueva**.
+```
+Elimina
+· Clase de Crossfit  (T-015 · Hoy, 21:00)
+· Clase de Crossfit  (T-016 · Mañana, 21:00)
+```
+
+Cuando no encuentra la tarea:
+
+- Si lo dices como una orden («borra», «cancela», «quita», «elimina», «anula»), te dice que no la encuentra y **no apunta nada**. Si en realidad era una tarea nueva, tienes el botón **Apúntalo como tarea nueva**.
+- Si lo escribes como algo por hacer, en infinitivo («Cancelar el seguro del coche»), lo apunta como tarea nueva, como siempre.
+- Si alguna tarea encaja, te pregunta y te da también el botón **No: apúntalo como tarea nueva**.
 
 Quitar una tarea es lo mismo que «Soltar tarea» en el panel: desaparece de la agenda y de los avisos, pero no se borra. Justo después tienes el botón **↩ Deshacer**, y más tarde puedes recuperarla desde el panel.
 

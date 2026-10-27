@@ -44,9 +44,9 @@ class TelegramBot(Base):
     def test_several_lines_and_errors(self):
         self.escribir("- Llamar a Ana el jueves\n\n• Regar las plantas cada 3 días\nAlgo #NoExiste")
         self.assertEqual([t.titulo for t in self.f.listar()], ["Llamar a Ana", "Regar las plantas"])
-        texto = self.respuesta()["text"]
-        self.assertIn("Apuntadas 2:", texto)
-        self.assertIn("No existe el proyecto «NoExiste»", texto)
+        textos = [d["text"] for m, d in self.llamadas if m == "sendMessage"]
+        self.assertEqual([t.split("\n")[0] for t in textos], ["Apuntada: Llamar a Ana", "Apuntada: Regar las plantas", "No he podido apuntar:"])
+        self.assertIn("No existe el proyecto «NoExiste»", textos[-1])
 
     def test_other_chats_are_ignored_silently(self):
         self.assertIsNone(self.escribir("Borrar todo", chat=OTRO))
@@ -165,11 +165,15 @@ class TelegramBot(Base):
         self.assertEqual(botones[0][0]["text"], "🗑 Gimnasio · Hoy, 19:00")
         self.escribir("cancela el gimnasio del miércoles")
         self.assertTrue(self.respuesta()["text"].startswith("¿Quito de la agenda «Gimnasio»?\nMié 28/10, 19:00"))
-        # Nothing with those words: it was a new task all along.
+        # Nothing with those words, said as a to-do (infinitive): it was a new task all along.
         self.escribir("Cancelar el seguro del coche el viernes")
         self.assertEqual(self.f.obtener("T-003").titulo, "Cancelar el seguro del coche")
-        # Something matches, but it was meant as a new task: the button writes it down.
+        # Said as an order, it never adds a task by itself: it says so and offers to.
         self.escribir("Quita las ruedas de invierno al gimnasio")  # «gimnasio» alone would not do: «ruedas» does not match
+        r = self.respuesta()
+        self.assertTrue(r["text"].startswith("No encuentro nada pendiente con «las ruedas de invierno al gimnasio»"))
+        self.assertEqual(len(self.f.listar()), 3)
+        self.pulsar(r["reply_markup"]["inline_keyboard"][0][0]["callback_data"])
         self.assertEqual(self.f.obtener("T-004").titulo, "Quita las ruedas de invierno al gimnasio")
         self.escribir("Elimina gimnasio")
         token = self.respuesta()["reply_markup"]["inline_keyboard"][-1][0]["callback_data"]
@@ -180,6 +184,54 @@ class TelegramBot(Base):
         self.assertEqual(self.llamadas[-1][1]["text"], "Este botón ya no sirve: escríbemelo otra vez")
         self.escribir("/borrar pádel")
         self.assertIn("No encuentro nada pendiente con «pádel»", self.respuesta()["text"])
+
+    def test_several_new_tasks_keep_their_buttons(self):
+        self.escribir("añademe la clase de Crossfit a las 21:00 mañana y hoy")
+        enviados = [d for m, d in self.llamadas if m == "sendMessage"]
+        self.assertEqual([d["text"] for d in enviados], ["Apuntada: Clase de Crossfit\nHoy, 21:00", "Apuntada: Clase de Crossfit\nMañana, 21:00"])
+        self.assertEqual([[b.get("callback_data") for b in d["reply_markup"]["inline_keyboard"][0]] for d in enviados],
+                         [["hecha:T-001", "manana:T-001", None], ["hecha:T-002", "manana:T-002", None]])
+        # More than a few: one list, a button per task and one to take them all off again.
+        self.escribir("\n".join(f"Tarea {n}" for n in range(1, 6)))
+        r = self.respuesta()
+        self.assertTrue(r["text"].startswith("Apuntadas 5:"))
+        botones = r["reply_markup"]["inline_keyboard"]
+        self.assertEqual([f[0]["callback_data"] for f in botones[:5]], [f"ver:T-00{n}" for n in range(3, 8)])
+        self.assertEqual(botones[5][0]["text"], "🗑 Quitar estas 5")
+        self.pulsar(botones[5][0]["callback_data"])
+        self.assertEqual({self.f.obtener(f"T-00{n}").estado for n in range(3, 8)}, {"soltada"})
+        deshacer = self.llamadas[-1][1]["reply_markup"]["inline_keyboard"][0][0]
+        self.assertTrue(self.llamadas[-1][1]["text"].startswith("Quitadas de la agenda 5:"))
+        self.pulsar(deshacer["callback_data"])
+        self.assertEqual({self.f.obtener(f"T-00{n}").estado for n in range(3, 8)}, {"pendiente"})
+
+    def test_take_off_several_at_once(self):
+        self.escribir("añademe la clase de Crossfit a las 21:00 mañana y hoy")
+        # «las dos» is how many, not part of the title.
+        self.escribir("elimina las dos clases de crossfit")
+        botones = self.respuesta()["reply_markup"]["inline_keyboard"]
+        self.assertEqual([f[0]["callback_data"] for f in botones[:2]], ["quitar:T-001", "quitar:T-002"])
+        self.assertEqual(botones[2][0]["text"], "🗑 Todas (2)")
+        self.pulsar(botones[2][0]["callback_data"])
+        self.assertEqual([self.f.obtener(i).estado for i in ("T-001", "T-002")], ["soltada", "soltada"])
+        self.pulsar(self.llamadas[-1][1]["reply_markup"]["inline_keyboard"][0][0]["callback_data"])
+        # Lines pasted from my own answer, under «elimina»: the numbers say which, nothing new is added.
+        self.escribir("elimina\n· Clase de Crossfit  (T-001 · Hoy, 21:00)\n· Clase de Crossfit  (T-002 · Mañana, 21:00)")
+        r = self.respuesta()
+        self.assertTrue(r["text"].startswith("¿Quito de la agenda estas 2?\n· Clase de Crossfit (Hoy, 21:00)"))
+        self.assertEqual(len(self.f.listar()), 2)
+        self.pulsar(r["reply_markup"]["inline_keyboard"][0][0]["callback_data"])
+        self.assertEqual([self.f.obtener(i).estado for i in ("T-001", "T-002")], ["soltada", "soltada"])
+        # «borra» with a task per line.
+        self.f.crear({"titulo": "Dentista", "fecha": "2026-10-28"})
+        self.f.crear({"titulo": "Llamar a Ana"})
+        self.escribir("borra:\ndentista\nllamar a ana")
+        self.assertTrue(self.respuesta()["text"].startswith("¿Quito de la agenda estas 2?"))
+        # An order that finds nothing adds nothing; several lines that start with a to-do are still tasks.
+        self.escribir("elimina las clases de yoga")
+        self.assertTrue(self.respuesta()["text"].startswith("No encuentro nada pendiente con «las clases de yoga»"))
+        self.escribir("Cancelar el seguro\nComprar pan")
+        self.assertEqual([t.titulo for t in self.f.listar()][-2:], ["Cancelar el seguro", "Comprar pan"])
 
     def test_done_postpone_and_view_by_words(self):
         self.f.crear({"titulo": "Dentista", "fecha": "2026-10-27", "hora": "17:30"})
@@ -211,7 +263,9 @@ class TelegramBot(Base):
         nuevas = [self.f.obtener(i) for i in ("T-003", "T-004")]
         self.assertEqual([(t.titulo, t.fecha, t.hora, t.repetir) for t in nuevas],
                          [("Fisio", "2026-10-28", "10:00", ""), ("Fisio", "2026-11-02", "10:00", "")])
-        self.assertTrue(self.respuesta()["text"].startswith("Apuntadas 2:"))
+        dos = [d for m, d in self.llamadas[-2:]]
+        self.assertEqual([d["text"].split("\n")[0] for d in dos], ["Apuntada: Fisio", "Apuntada: Fisio"])
+        self.assertEqual([d["reply_markup"]["inline_keyboard"][0][0]["callback_data"] for d in dos], ["hecha:T-003", "hecha:T-004"])
 
     def boton(self, n=0, fila=0):
         return self.respuesta()["reply_markup"]["inline_keyboard"][fila][n]["callback_data"]

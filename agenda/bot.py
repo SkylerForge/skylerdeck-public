@@ -21,11 +21,12 @@ from .encontrar import encontrar, es_id
 from .errores import AgendaError
 from .fichas import ETIQUETAS_ESTADO, Fichas, Tarea, normalizar_id
 from .bot_frases import Frases
-from .bot_textos import AYUDA, Textos
+from .bot_textos import AYUDA, MAX_BOTONES, Textos
 from .notas import Notas
 
 QUIEN = "telegram"
 MAX_LINEAS = 20  # tasks from one message
+MAX_SUELTAS = 4  # up to this many new tasks, each gets its own message with its buttons
 MAX_PENDIENTES = 50  # texts waiting for «apúntalo como tarea nueva»
 # «Borra la cita del dentista», «cancela la reunión del lunes», «quítame el gimnasio de mañana».
 
@@ -55,10 +56,9 @@ class Bot(Textos, Frases):
         try:
             if texto.startswith("/"):
                 return self._comando(chat, texto)
-            if "\n" not in texto:
-                hecho = self._frase(chat, texto)
-                if hecho:
-                    return hecho
+            hecho = self._frase(chat, texto) if "\n" not in texto else self._frase_lineas(chat, texto)
+            if hecho:
+                return hecho
             return self._apuntar(chat, texto)
         except AgendaError as err:
             self._decir(chat, str(err))
@@ -149,22 +149,29 @@ class Bot(Textos, Frases):
             except AgendaError as err:
                 fallos.append(f"«{linea[:60]}»: {err}")
         ahora = fechas.ahora()
-        if len(creadas) == 1 and not fallos:
-            t, avisos = creadas[0]
-            extra = "".join(f"\nOjo: {a}" for a in avisos)
-            botones = self._botones(t)
-            if t.hora and t.hora >= "13:00" and any("lo entiendo como" in a for a in avisos):
-                botones.append([{"text": "Era por la mañana", "callback_data": f"am:{t.id}"}])
-            self._decir(chat, f"Apuntada: {t.titulo}\n{self._meta(t, ahora) or 'Sin fecha'}{extra}", botones)
+        if creadas and len(creadas) <= MAX_SUELTAS:
+            for t, avisos in creadas:  # each one as if it came alone, with its buttons
+                self._apuntada(chat, t, avisos)
+            if fallos:
+                self._decir(chat, "\n".join(["No he podido apuntar:"] + fallos))
         else:
-            partes = []
+            partes, botones = [], None
             if creadas:
+                tareas = [t for t, _ in creadas]
                 partes.append(f"Apuntadas {len(creadas)}:")
-                partes += [f"· {t.titulo}  ({t.id}{' · ' + vistas.cuando(t, ahora) if t.fecha else ''})" for t, _ in creadas]
+                partes += [f"· {t.titulo}  ({t.id}{' · ' + vistas.cuando(t, ahora) if t.fecha else ''})" for t in tareas]
+                botones = self._opciones(tareas, "ver:{}", [[self._boton_varias(tareas, f"🗑 Quitar estas {len(tareas)}")]])
             if fallos:
                 partes += ["", "No he podido apuntar:"] + fallos
-            self._decir(chat, "\n".join(partes))
+            self._decir(chat, "\n".join(partes), botones)
         return f"{len(creadas)} tarea(s) apuntada(s)" + (f", {len(fallos)} con error" if fallos else "")
+
+    def _apuntada(self, chat: str, t: Tarea, avisos: list[str]) -> None:
+        extra = "".join(f"\nOjo: {a}" for a in avisos)
+        botones = self._botones(t)
+        if t.hora and t.hora >= "13:00" and any("lo entiendo como" in a for a in avisos):
+            botones.append([{"text": "Era por la mañana", "callback_data": f"am:{t.id}"}])
+        self._decir(chat, f"Apuntada: {t.titulo}\n{self._meta(t, fechas.ahora()) or 'Sin fecha'}{extra}", botones)
 
     def _crear(self, linea: str) -> tuple[list[Tarea], list[str]]:
         """One task, or one per date for «el lunes y el miércoles» (never a recurrence)."""
@@ -206,6 +213,25 @@ class Bot(Textos, Frases):
         extra = f"\nSe repetía {t.repetir}: ya no volverá." if t.repetir else ""
         return f"Quitada de la agenda: {t.titulo}{extra}", {"text": "↩ Deshacer", "callback_data": f"recuperar:{t.id}:{antes}"}
 
+    def _quitar_varias(self, ids: list[str]) -> tuple[str, dict]:
+        """Several at once (the «Todas» button); «Deshacer» puts back every one."""
+        quitadas, volver = [], []
+        for id_ in ids:
+            try:
+                antes = self.fichas.obtener(id_)
+                self._quitar(id_)
+            except AgendaError:
+                continue  # already gone: the rest still go
+            quitadas.append(f"· {antes.titulo}" + (f" (se repetía {antes.repetir}: ya no volverá)" if antes.repetir else ""))
+            volver.append(f"{antes.id}:{'en-curso' if antes.estado == 'en-curso' else 'pendiente'}")
+        if not quitadas:
+            raise AgendaError("Ya no estaban en la agenda")
+        texto = f"Quitadas de la agenda {len(quitadas)}:\n" + "\n".join(quitadas)
+        return texto, {"text": "↩ Deshacer", "callback_data": f"volver:{self._guardar(','.join(volver))}"}
+
+    def _boton_varias(self, tareas: list[Tarea], texto: str) -> dict:
+        return {"text": texto, "callback_data": f"varias:{self._guardar(','.join(t.id for t in tareas))}"}
+
     # ---------- naming tasks by their words ----------
 
     def _con_tarea(self, chat: str, texto: str, accion: str, pregunta: str, extra: str = "") -> str:
@@ -220,18 +246,21 @@ class Bot(Textos, Frases):
         self._decir(chat, pregunta, self._opciones(tareas, datos, [[{"text": "Ninguna", "callback_data": "nada:0"}]]))
         return f"{accion}: {len(tareas)} posibles"
 
-    def _pedir_quitar(self, chat: str, texto: str, nueva: str | None = None) -> str | None:
-        """Asks before taking a task off. With `nueva` (a plain message), finding nothing returns None
-        so the message becomes a task after all, and the question offers that too."""
+    def _pedir_quitar(self, chat: str, texto: str, nueva: str | None = None, o_nueva: bool = False) -> str | None:
+        """Asks before taking a task off. With `nueva` (a plain message), the question also offers
+        «apúntalo como tarea nueva», and so does the answer when nothing matches. With `o_nueva`, finding
+        nothing returns None instead, so the message becomes a task («no hay leche»)."""
         if es_id(texto) and not self.fichas.obtener(normalizar_id(texto)).repetir:
             aviso, deshacer = self._quitar(normalizar_id(texto))
             self._decir(chat, aviso, [[deshacer]])
             return "quitada"
         tareas = encontrar(self.fichas, texto)
         if not tareas:
-            if nueva:
+            if o_nueva:
                 return None
-            self._decir(chat, f"No encuentro nada pendiente con «{texto.strip()}». Mira /hoy o /semana, o búscalo con /buscar.")
+            # Never a new task by itself: «borra las clases» that finds nothing must not add one.
+            nuevo = [[{"text": "Apúntalo como tarea nueva", "callback_data": f"nueva:{self._guardar(nueva)}"}]] if nueva else None
+            self._decir(chat, f"No encuentro nada pendiente con «{texto.strip()}». Mira /hoy o /semana, o búscalo con /buscar.", nuevo)
             return "quitar: no encontrada"
         no = [{"text": "No", "callback_data": "nada:0"}]
         if nueva:
@@ -239,7 +268,8 @@ class Bot(Textos, Frases):
         if len(tareas) == 1:
             self._decir(chat, *self._pregunta_quitar(tareas[0], no))
         else:
-            self._decir(chat, "¿Cuál quito de la agenda?", self._opciones(tareas, "quitar:{}", [no], "🗑 "))
+            todas = [self._boton_varias(tareas[:MAX_BOTONES], f"🗑 Todas ({min(len(tareas), MAX_BOTONES)})")]
+            self._decir(chat, "¿Cuál quito de la agenda?", self._opciones(tareas, "quitar:{}", [todas, no], "🗑 "))
         return f"quitar: {len(tareas)} posible(s)"
 
     def _pregunta_quitar(self, t: Tarea, no: list[dict]) -> tuple[str, list[list[dict]]]:
@@ -304,6 +334,24 @@ class Bot(Textos, Frases):
                 nuevo = []
             elif accion == "nada":
                 aviso, nuevo = "Vale, no toco nada", []
+            elif accion == "varias":  # varias:<token of «T-015,T-016»>
+                ids = self._pendientes.pop(arg, None)
+                if ids is None:
+                    aviso, nuevo = "Este botón ya no sirve: escríbemelo otra vez", []
+                else:
+                    aviso, deshacer = self._quitar_varias(ids.split(","))
+                    nuevo, texto_nuevo = [[deshacer]], aviso
+            elif accion == "volver":  # volver:<token of «T-015:pendiente,…»>, the undo of «varias»
+                pares = self._pendientes.pop(arg, None)
+                if pares is None:
+                    aviso = "Este botón ya no sirve: recupéralas desde el panel"
+                else:
+                    for par in pares.split(","):
+                        id_, _, estado = par.partition(":")
+                        self.fichas.mover(id_, estado, QUIEN, nota="Recuperada desde Telegram")
+                    aviso = f"Vuelven a estar en la agenda: {len(pares.split(','))}"
+                    texto_nuevo = aviso
+                nuevo = []
             else:
                 id_ = normalizar_id(id_)
                 if accion == "hecha":

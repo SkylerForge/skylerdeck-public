@@ -158,6 +158,11 @@ class QuickAdd(unittest.TestCase):
         cases = {
             "Recuérdame que tengo cita con el dentista mañana": "Cita con el dentista",
             "Tengo que renovar el DNI": "Renovar el DNI",
+            "Añademe la clase de Crossfit": "Clase de Crossfit",
+            "Añádeme a la agenda la revisión del coche": "Revisión del coche",
+            "Ponme el dentista": "Dentista",
+            "Pon la lavadora": "Pon la lavadora",
+            "Añade sal a la lista": "Añade sal a la lista",
             "Apunta que el viernes como con mi madre": "Como con mi madre",
             "Por favor apúntame la revisión de la caldera, por favor": "Revisión de la caldera",
             "tengo una reunión con Marta el lunes": "Reunión con Marta",

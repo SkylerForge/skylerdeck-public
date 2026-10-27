@@ -2,6 +2,15 @@
 
 Lo que trae cada versión de SkylerDeck. Para pasar a la última: `sudo scripts/instalar.sh actualizar` ([cómo funciona](docs/instalacion.md#actualizar)).
 
+## 1.0.1 · 27 de octubre de 2026
+
+**Bot de Telegram**
+- Cuando un mensaje apunta varias tareas («la clase de crossfit hoy y mañana»), cada una llega con sus botones, como si la hubieras escrito sola. Si son más de cuatro, llega la lista con un botón por tarea y otro para quitarlas todas.
+- «Elimina las dos clases de crossfit» las encuentra (los números y «todas» o «ambas» ya no se buscan en el título) y ofrece **🗑 Todas**.
+- Para quitar varias de una vez: «elimina» en la primera línea y debajo una por línea, o las líneas pegadas de una respuesta del bot.
+- Una orden como «borra…» o «elimina…» que no encuentra nada ya no se apunta como tarea: lo dice y ofrece apuntarla.
+- «Añádeme», «Agrégame», «Ponme» o «Méteme» al principio ya no pasan al título.
+
 ## 1.0.0 · 27 de octubre de 2026
 
 La primera versión.

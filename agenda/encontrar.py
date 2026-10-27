@@ -14,7 +14,9 @@ from . import fechas, quickadd, vistas
 from .fichas import ID_RE, Fichas, Tarea, normalizar_id
 
 VACIAS = {"el", "la", "los", "las", "lo", "un", "una", "unos", "unas", "de", "del", "al", "a", "con", "en",
-          "para", "por", "y", "o", "mi", "mis", "tu", "tus", "su", "sus", "que", "esa", "ese", "esta", "este"}
+          "para", "por", "y", "o", "mi", "mis", "tu", "tus", "su", "sus", "que", "esa", "ese", "esta", "este",
+          # how many, not which: «borra las dos clases de crossfit», «quita todas las del gimnasio»
+          "esas", "esos", "estas", "estos", "dos", "tres", "cuatro", "ambas", "ambos", "todas", "todos"}
 GENERICAS = {"cita", "citas", "tarea", "tareas", "evento", "eventos", "recordatorio", "recordatorios", "aviso", "cosa"}
 PALABRA_RE = re.compile(r"[a-z0-9ñ]+")
 

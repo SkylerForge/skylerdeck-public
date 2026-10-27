@@ -60,7 +60,10 @@ SOBRANTE_RE = re.compile(r"(?:^|\s+)(?:el|la|a|las|los|para|de|del|al|y|en|por|,
 RELLENO_RE = re.compile(
     r"^(?:(?:por\s+favor|oye|vale)[,\s]+)?"
     r"(?:recu[ée]rda(?:me|nos|le)?|ap[úu]nta(?:me|nos|lo)?|anota(?:me|lo)?|no\s+(?:me\s+)?olvides(?:\s+de)?"
-    r"|que\s+no\s+se\s+me\s+olvide|tengo\s+que|tenemos\s+que|hay\s+que)(?:\s+que)?(?:[,:\s]+|$)",
+    r"|que\s+no\s+se\s+me\s+olvide|tengo\s+que|tenemos\s+que|hay\s+que"
+    r"|a[ñn][aá]de(?:me|nos)|agr[eé]ga(?:me|nos)|pon(?:me|nos)|m[eé]te(?:me|nos)"  # «añádeme…», not «pon la lavadora»
+    r"|(?:a[ñn][aá]de|agr[eé]ga|pon|mete)(?=\s+(?:a|en)\s+(?:la|mi)\s+agenda\b))"
+    r"(?:\s+(?:a|en)\s+(?:la|mi)\s+agenda\b)?(?:\s+que)?(?:[,:\s]+|$)",
     re.IGNORECASE,
 )
 # «Tengo cita con…» → «Cita con…»

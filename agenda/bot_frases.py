@@ -4,7 +4,8 @@
 jueves», «ponle prioridad 1 al informe», «añade a la compra: leche, pan».
 
 A rule only acts when some task matches the words (encontrar.py); otherwise the message is a new task,
-as always. Taking off and moving ask first and also offer «apúntalo como tarea nueva», because the same
+as always, except an order like «borra…» / «elimina…», which answers that it found nothing (with a button
+to add it after all); the infinitive («Cancelar el seguro») reads as a to-do and still becomes a task. Taking off and moving ask first and also offer «apúntalo como tarea nueva», because the same
 sentence could be a task («Cancelar el seguro», «Cambiar el aceite»). Skipping and ticking act at once,
 with «Deshacer». `Frases` is a mixin of `bot.Bot`.
 """
@@ -12,9 +13,10 @@ from __future__ import annotations
 
 import re
 
-from . import fechas, quickadd
+from . import fechas, quickadd, vistas
+from .bot_textos import MAX_BOTONES
 from .encontrar import encontrar
-from .fichas import Tarea
+from .fichas import Tarea, normalizar_id
 
 _FIN = r"[.!\s]*$"
 QUITAR_RE = re.compile(
@@ -44,10 +46,38 @@ LISTA_RE = re.compile(
     rf"(?P<lista>(?:(?:la|el|mi)\s+)?[^\W\d_]+(?:\s+de\s+[^\W\d_]+)?){_FIN}", re.IGNORECASE)
 SEPARA_COSAS_RE = re.compile(r"\s*(?:,|;|\by\b|\be\b)\s*", re.IGNORECASE)
 ARTICULO_RE = re.compile(r"^(?:la|el|los|las|mi|mis)\s+", re.IGNORECASE)
+NUMERO_RE = re.compile(r"\bT-?(\d{1,6})\b", re.IGNORECASE)  # task numbers inside a text, like my own answers
 MAX_COSAS = 30
 
 
 class Frases:
+    def _frase_lineas(self, chat: str, texto: str) -> str | None:
+        """«elimina» and, below it, the tasks: one per line, or lines pasted from my own answer
+        («· Clase de Crossfit (T-015 · Hoy, 21:00)»), where the numbers win. Any other message of
+        several lines is new tasks, even if it starts with «Cancelar…»."""
+        lineas = [l.strip().lstrip("-•*·").strip() for l in texto.splitlines()]
+        lineas = [l for l in lineas if l]
+        m = QUITAR_RE.match(lineas[0]) if lineas else None
+        numeros = NUMERO_RE.findall(texto)
+        if not m or (m["resto"] and not numeros):
+            return None
+        tareas = {}
+        for buscar in [f"T-{n}" for n in numeros] or lineas[1:]:
+            for t in encontrar(self.fichas, buscar):
+                tareas.setdefault(t.id, t)
+        if not tareas:
+            self._decir(chat, "No encuentro esas tareas pendientes en la agenda. Mira /hoy o /semana.")
+            return "quitar varias: no encontradas"
+        tareas = list(tareas.values())
+        if len(tareas) == 1:
+            self._decir(chat, *self._pregunta_quitar(tareas[0], [{"text": "No", "callback_data": "nada:0"}]))
+        else:
+            ahora = fechas.ahora()
+            lista = "\n".join(f"· {t.titulo}" + (f" ({vistas.cuando(t, ahora)})" if t.fecha else "") for t in tareas[:MAX_BOTONES])
+            self._decir(chat, f"¿Quito de la agenda estas {min(len(tareas), MAX_BOTONES)}?\n{lista}",
+                        [[self._boton_varias(tareas[:MAX_BOTONES], "🗑 Sí, quítalas")], [{"text": "No", "callback_data": "nada:0"}]])
+        return f"quitar varias: {len(tareas)} posible(s)"
+
     def _frase(self, chat: str, texto: str) -> str | None:
         """Handles a one-line message that talks about existing tasks; None when it is a new task."""
         m = LISTA_DOS_PUNTOS_RE.match(texto)
@@ -58,7 +88,8 @@ class Frases:
             self._decir(chat, "¿Qué quito? Dímelo así: «borra la cita del dentista».")
             return "quitar: sin texto"
         if m:
-            return self._pedir_quitar(chat, m["resto"], nueva=texto)
+            infinitivo = texto.split()[0].lower().rstrip(",:").endswith("r")
+            return self._pedir_quitar(chat, m["resto"], nueva=texto, o_nueva=infinitivo)
         m = PRIORIDAD_RE.match(texto) or URGENTE_RE.match(texto)
         if m:
             return self._actuar(chat, m["resto"], "prio", "¿A cuál le cambio la prioridad?", m.groupdict().get("p") or "1")
@@ -105,7 +136,7 @@ class Frases:
                 return "saltar: no es la próxima"
             repetidas = exactas
         if not repetidas:
-            return self._pedir_quitar(chat, consulta, nueva=texto)
+            return self._pedir_quitar(chat, consulta, nueva=texto, o_nueva=True)
         if len(repetidas) == 1:
             return self._boton({"id": "", "data": f"saltar:{repetidas[0].id}", "message": {"chat": {"id": chat}}}, responder=chat)
         self._decir(chat, "¿Cuál te saltas?", self._opciones(repetidas, "saltar:{}", [[{"text": "Ninguna", "callback_data": "nada:0"}]]))
