@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e110c">
+  <title>SkylerDeck</title>
+  <script src="/static/js/tema.js"></script>
+  <link rel="icon" type="image/png" href="/static/iconos/favicon.png">
+  <link rel="apple-touch-icon" href="/static/iconos/apple-touch-icon.png">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/vistas.css">
+  <link rel="stylesheet" href="/static/css/notas.css">
+  <link rel="stylesheet" href="/static/css/mes.css">
+  <script type="module" src="/static/js/app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <nav class="rail" aria-label="Secciones">
+      <a class="rail__logo" href="#/inicio" aria-label="Inicio">S</a>
+      <div class="rail__nav" id="rail-nav"></div>
+      <div class="rail__reloj" id="reloj" aria-hidden="true"></div>
+    </nav>
+    <main class="vista" id="vista" tabindex="-1"></main>
+  </div>
+  <aside class="hoja" id="hoja" hidden aria-modal="true" role="dialog" aria-label="Tarea"></aside>
+  <div class="velo" id="velo" hidden></div>
+  <div class="paleta" id="paleta" hidden role="dialog" aria-modal="true" aria-label="Buscar"></div>
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

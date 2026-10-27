@@ -1,0 +1,27 @@
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Dependencias
+        run: pip install -r requirements-dev.txt
+      - name: Pruebas
+        run: python -m unittest discover -s tests -t .
+      - name: Sintaxis de los scripts
+        run: bash -n scripts/instalar.sh scripts/copia-datos.sh scripts/copia-remota.sh

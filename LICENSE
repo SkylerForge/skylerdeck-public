@@ -1,0 +1,69 @@
+LICENCIA DE USO DE SKYLERDECK
+
+Copyright © 2026 Skyler. Todos los derechos reservados.
+
+SkylerDeck (en adelante, «el software») es propiedad de Skyler. El software
+no es de código abierto. Esta licencia indica lo que puedes y lo que no puedes
+hacer con él.
+
+1. Uso permitido
+
+   Puedes descargar, instalar y usar gratuitamente el software tal como se
+   distribuye en su repositorio oficial (SkylerForge/skylerdeck-public en GitHub),
+   en tus propios equipos o servidores, para uso personal o profesional.
+
+   Instalarlo, actualizarlo desde el repositorio oficial y configurarlo con
+   las opciones previstas (el instalador, la página de Ajustes y las variables
+   de entorno descritas en la documentación) forma parte de ese uso y no se
+   considera una modificación.
+
+   Las tareas, notas y demás datos que crees con el software son tuyos.
+
+2. Usos no permitidos
+
+   Salvo autorización previa y por escrito de Skyler, no puedes:
+
+   a) modificar, adaptar, traducir o alterar el software, su interfaz o su
+      código, ni crear obras derivadas a partir de ellos;
+   b) copiar, redistribuir, publicar, vender, alquilar, prestar o sublicenciar
+      el software o cualquier parte de él, modificado o sin modificar, ni
+      ofrecerlo como servicio a terceros; para compartirlo, enlaza al
+      repositorio oficial;
+   c) descompilar, desensamblar, extraer o aplicar ingeniería inversa al
+      software, salvo en la medida en que la ley aplicable lo permita
+      expresamente pese a esta prohibición;
+   d) eliminar, ocultar o alterar los avisos de autoría, de marca o de esta
+      licencia;
+   e) usar el nombre «Skyler», su logotipo o cualquier otro signo distintivo
+      de Skyler en productos propios, ni presentar el software como tuyo o
+      como creado por otra persona.
+
+3. Código fuente
+
+   El software se distribuye como código fuente porque así se instala y se
+   ejecuta. Que puedas leerlo no te concede ningún derecho distinto de los del
+   punto 1.
+
+4. Componentes de terceros
+
+   El software incluye o instala componentes de terceros (las tipografías
+   Inter y Aldrich, y las bibliotecas de Python Flask, waitress, segno y
+   tzdata), que se rigen por sus propias licencias, descritas en
+   THIRD_PARTY.md. Esta licencia no se aplica a esos componentes ni limita los
+   derechos que sus licencias te conceden sobre ellos.
+
+5. Sin garantía
+
+   El software se proporciona «tal cual», sin garantía de ningún tipo, expresa
+   o implícita. En la medida en que lo permita la ley, Skyler no será
+   responsable de ningún daño derivado del uso o de la imposibilidad de uso
+   del software, incluida la pérdida de datos. Haz copias de seguridad.
+
+6. Fin de la licencia
+
+   Si incumples cualquiera de estas condiciones, la licencia termina
+   automáticamente y debes dejar de usar el software y borrar tus copias. Tus
+   datos siguen siendo tuyos.
+
+Para pedir autorizaciones o usos distintos de los descritos, contacta con
+Skyler a través de GitHub (SkylerForge).

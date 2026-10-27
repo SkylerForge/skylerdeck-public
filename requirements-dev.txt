@@ -1,0 +1,2 @@
+-r requirements.txt
+PyYAML==6.0.2  # solo para comprobar en los tests que la cabecera es YAML válido

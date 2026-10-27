@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""Entry point for the agenda's Telegram bot (see agenda/bot_servicio.py). Re-runs itself with .venv."""
+import os
+import sys
+
+RAIZ = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+VENV_PY = os.path.join(RAIZ, ".venv", "bin", "python")
+if os.path.exists(VENV_PY) and os.path.realpath(sys.prefix) != os.path.realpath(os.path.join(RAIZ, ".venv")):
+    os.execv(VENV_PY, [VENV_PY, os.path.realpath(__file__), *sys.argv[1:]])
+sys.path.insert(0, RAIZ)
+
+from agenda.bot_servicio import main  # noqa: E402
+
+sys.exit(main())

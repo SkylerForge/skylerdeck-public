@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""Serves the panel on the Tailscale IP only.
+
+    bin/agenda-panel          serve (AGENDA_HOST, AGENDA_PUERTO, AGENDA_DATOS, AGENDA_HOSTS)
+    bin/agenda-panel enlace   print the pairing link and its QR code for a new device (contains the key: do not share it)
+    bin/agenda-panel demo     made-up data (AGENDA_DATOS) on 127.0.0.1:4852, no key, opens in the editor preview
+"""
+import os
+import subprocess
+import sys
+
+RAIZ = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+VENV_PY = os.path.join(RAIZ, ".venv", "bin", "python")
+if os.path.exists(VENV_PY) and os.path.realpath(sys.prefix) != os.path.realpath(os.path.join(RAIZ, ".venv")):
+    os.execv(VENV_PY, [VENV_PY, os.path.realpath(__file__), *sys.argv[1:]])
+sys.path.insert(0, RAIZ)
+
+from agenda import seguridad  # noqa: E402
+
+PUERTO = int(os.environ.get("AGENDA_PUERTO", "4850"))
+
+
+def tailscale_ip() -> str:
+    out = subprocess.run(["tailscale", "ip", "-4"], capture_output=True, text=True, check=True).stdout.split()
+    if not out:
+        sys.exit("No hay IP de Tailscale: ¿está tailscale conectado?")
+    return out[0]
+
+
+def host() -> str:
+    value = os.environ.get("AGENDA_HOST") or tailscale_ip()
+    if value in ("0.0.0.0", "::", ""):
+        sys.exit("El panel no escucha en todas las interfaces: usa la IP de Tailscale")
+    return value
+
+
+def demo() -> None:
+    """Made-up data only, on 127.0.0.1, without device key, embeddable in the editor's preview."""
+    from pathlib import Path
+
+    from waitress import serve
+
+    from agenda.servidor import crear_app
+
+    datos = Path(os.environ.get("AGENDA_DATOS", "")).expanduser().resolve()
+    if not os.environ.get("AGENDA_DATOS") or datos == (Path(RAIZ) / "datos").resolve():
+        sys.exit("El modo demo necesita AGENDA_DATOS apuntando a datos inventados (scripts/demo.py), nunca a datos/")
+    puerto = int(os.environ.get("AGENDA_PUERTO", "4852"))
+    print(f"Demo de SkylerDeck en http://127.0.0.1:{puerto} (solo esta máquina, datos de {datos})", flush=True)
+    serve(crear_app(datos, demo=True), host="127.0.0.1", port=puerto, threads=8, ident="skylerdeck-demo")
+
+
+def main() -> None:
+    if sys.argv[1:] == ["enlace"]:
+        # The installer saves the HTTPS address it published with tailscale serve.
+        guardada = os.path.expanduser("~/.config/skylerdeck/url")
+        base = os.environ.get("AGENDA_URL") or (open(guardada).read().strip() if os.path.exists(guardada) else "") \
+            or f"http://{host()}:{PUERTO}"
+        enlace = f"{base}/?clave={seguridad.leer_o_crear_clave()}"
+        print(enlace)
+        try:
+            import segno
+
+            print("\nO escanea este código con la cámara del móvil (con Tailscale encendido):\n")
+            segno.make(enlace, error="m").terminal(compact=True)
+        except ImportError:
+            pass
+        return
+    if sys.argv[1:] == ["demo"]:
+        demo()
+        return
+    if sys.argv[1:]:
+        sys.exit(__doc__)
+
+    from waitress import serve
+
+    from agenda.servidor import crear_app, hosts_extra
+
+    import logging
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout, force=True)
+    logging.getLogger("waitress").setLevel(logging.WARNING)
+    h = host()
+    print(f"SkylerDeck en http://{h}:{PUERTO}", flush=True)
+    # Only local proxies reach us (tailscale serve, or your own Caddy/nginx): trust the scheme they report,
+    # so the device cookie is Secure behind HTTPS. Nothing else from those headers is trusted.
+    serve(crear_app(hosts_extra=hosts_extra()), host=h, port=PUERTO, threads=8, ident="skylerdeck",
+          trusted_proxy="127.0.0.1" if h == "127.0.0.1" else None, trusted_proxy_headers={"x-forwarded-proto"})
+
+
+if __name__ == "__main__":
+    main()

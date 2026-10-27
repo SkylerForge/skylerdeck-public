@@ -1,0 +1,77 @@
+/* Inicio as a month: the grid and the chosen day beside it (below it on the phone). */
+
+.vista-inicio .pildora { min-height: 36px; padding: 0 var(--space-4); }
+.sem-nav { gap: var(--space-2); }
+
+.mes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--space-4);
+  min-height: 0;
+}
+.mes-rejilla {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  min-height: 0;
+  padding: var(--space-3);
+}
+.mes-cab { padding: 0 8px 4px; color: var(--tinta-3); font-size: 12.5px; font-weight: 600; }
+.mes-dia {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+}
+.mes-dia__num { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.mes-dia__nota { display: inline-grid; color: var(--personal); }
+.mes-dia__nota .ico { width: 13px; height: 13px; }
+.mes-dia__lineas { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mes-linea { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 12px; line-height: 1.35; }
+.mes-linea span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mes-linea b { flex: none; color: var(--tinta-2); font-weight: 600; }
+.mes-linea .punto { width: 6px; height: 6px; }
+.mes-linea--hecha span { color: var(--tinta-3); text-decoration: line-through; }
+.mes-linea--repeticion span, .mes-linea--revisar span { color: var(--tinta-2); }
+.mes-dia__mas { color: var(--tinta-3); font-size: 11.5px; }
+.mes-dia__puntos { display: none; }
+.mes-dia--fuera .mes-dia__num, .mes-dia--fuera .mes-linea span { color: var(--tinta-3); }
+.mes-dia--pasado:not(.mes-dia--hoy) .mes-dia__num { color: var(--tinta-3); }
+.mes-dia--hoy { background: var(--elevado); }
+.mes-dia--hoy .mes-dia__num { color: var(--tinta); }
+.mes-dia--sel { border-color: var(--linea-fuerte); }
+.punto--hecha { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--tinta-3); }
+@media (hover: hover) { .mes-dia:hover { background: var(--elevado); } }
+
+.mes-detalle { display: flex; flex-direction: column; min-height: 0; padding: var(--space-4) var(--space-3) var(--space-3); }
+.mes-detalle__cab { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 0 var(--space-2); }
+.mes-detalle__cab h2 { margin: 0; font-size: 15px; }
+.mes-detalle__lista { flex: 1; min-height: 0; overflow: auto; }
+.mes-detalle__pie { display: flex; flex-wrap: wrap; gap: 0 var(--space-4); padding: var(--space-2) var(--space-2) 0; border-top: 1px solid var(--linea); }
+.mes-detalle__pie .anadir { font-size: 14px; }
+
+@media (max-width: 1100px) {
+  .mes { grid-template-columns: minmax(0, 1fr); }
+  .mes-rejilla { min-height: 520px; }
+}
+
+@media (max-width: 760px) {
+  .mes { display: flex; flex-direction: column; }
+  .mes-rejilla { min-height: 0; padding: var(--space-2); gap: 2px; grid-template-rows: none !important; }
+  .mes-cab { padding: 0 0 2px; text-align: center; font-size: 11.5px; }
+  .mes-dia { align-items: center; min-height: 52px; padding: 6px 2px; }
+  .mes-dia__num { justify-content: center; font-size: 15px; }
+  .mes-dia__nota, .mes-dia__lineas { display: none; }
+  .mes-dia__puntos { display: flex; gap: 3px; min-height: 6px; }
+  .mes-dia__puntos .punto { width: 5px; height: 5px; }
+  .sem-nav { flex-wrap: wrap; }
+  .vista-inicio { width: 100%; }
+  .vista-inicio .pildora { flex: 1; }
+}
